@@ -146,7 +146,7 @@ NOTES:
  *   Rating: 1
  */
 int signMask(void) {
-  return 1;
+  return 1 << 31;
 }
 
 // P2
@@ -158,7 +158,9 @@ int signMask(void) {
  *   Rating: 2
  */
 int bitXor(int x, int y) {
-	return 2;
+  int x_ny = x & ~y;
+  int nx_y = ~x & y;
+  return ~(~x_ny & ~nx_y);
 }
 
 // P3
@@ -170,7 +172,9 @@ int bitXor(int x, int y) {
  *   Rating: 3
  */
 int negativePart(int x){
-  return 3;
+  int mask = x >> 31;
+  int neg = ~x + 1;
+  return mask & neg;
 }
 
 
@@ -185,7 +189,12 @@ int negativePart(int x){
  *   Rating: 4
  */
 int copyByteWithin(int x, int src, int dst) {
-  return 4;
+  // get the byte that is from source
+  int byte = (x >> (src << 3)) & 0xFF;
+  // clean the destination source from the number
+  int mask = ~(0xFF << (dst << 3));
+  int masked_x = mask & x;
+  return masked_x | (byte << (dst << 3)); 
 }
 
 // P5
@@ -198,7 +207,9 @@ int copyByteWithin(int x, int src, int dst) {
  *   Rating: 4
  */
 int logicalShift(int x, int n) {
-  return 5;
+  // 最高的 n+1 位全是 1
+  int mask = ~(((1 << 31) >> n) << 1);
+  return (x >> n) & mask;
 }
 
 // P6
@@ -210,7 +221,8 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int swapNibblePairs(int x) {
-  return 6;
+  int mask = (0x0F << 24) | (0x0F << 16) | (0x0F << 8) | 0x0F;
+  return ((x >> 4) & mask) | ((x & mask) << 4);
 }
 
 // P7
