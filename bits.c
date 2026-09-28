@@ -207,7 +207,7 @@ int copyByteWithin(int x, int src, int dst) {
  *   Rating: 4
  */
 int logicalShift(int x, int n) {
-  // 最高的 n+1 位全是 1
+  // mask 的高 n 位全是 0， 低 32 - n 位全是 1
   int mask = ~(((1 << 31) >> n) << 1);
   return (x >> n) & mask;
 }
@@ -235,7 +235,15 @@ int swapNibblePairs(int x) {
  *   Rating: 4
  */
 int secondLowestZeroBit(int x) {
-  return 7;
+  /* x + 1 负责把第一个0之后的所有1全部清成0, 然后我们这个第一个0变成1
+  注意到，如果我们对于 x 来进行 ~ 操作，那么第一个0变成1，前面所有位都和 x 相反，也就和 x + 1 相反
+  然后再进行 & 操作，我们就得到了只有最低一位是0的这个掩码
+  */
+  int lowest_zero_mask = (~x) & (x + 1);
+  /* 然后我们把这个最低位的0变成1*/
+  int x1 = x ^ lowest_zero_mask;
+  /* 重复一次取掩码操作，得到第二个最低位的0的掩码*/
+  return (~x1) & (x1 + 1);
 }
 
 // P8
@@ -248,7 +256,32 @@ int secondLowestZeroBit(int x) {
  *   Rating: 5
  */
 int oddParity(int x) {
-  return 8;
+  /* 我们把 x 分成两部分，每部分16位，然后我们分别计算每部分的奇偶性*/
+  int up_16bit = (x & ((0xFF << 24) | (0xFF << 16))) >> 16;
+  int down_16bit = x & ((0xFF << 8) | 0xFF);
+  int half = up_16bit ^ down_16bit;
+  
+  /* 我们把 half 分成两部分，每部分8位，然后我们分别计算每部分的奇偶性*/
+  int up_8bit = (half & ((0xFF << 8))) >> 8;
+  int down_8bit = half & (0xFF);
+  int quarter = up_8bit ^ down_8bit;
+  
+  /* 我们把 quarter 分成两部分，每部分4位，然后我们分别计算每部分的奇偶性*/
+  int up_4bit = (quarter & (0xF0)) >> 4;
+  int down_4bit = quarter & 0xF;
+  int eighth = up_4bit ^ down_4bit;
+
+  /* 我们把 eighth 分成两部分，每部分2位，然后我们分别计算每部分的奇偶性*/
+  int up_2bit = (eighth & (0xC)) >> 2;
+  int down_2bit = eighth & 0x3;
+  int sixteenth = up_2bit ^ down_2bit;
+
+  /* 我们把 sixteenth 分成两部分，每部分1位，然后我们分别计算每部分的奇偶性*/
+  int up_1bit = (sixteenth & (0x2)) >> 1;
+  int down_1bit = sixteenth & 0x1;
+  int thirty_second = up_1bit ^ down_1bit;
+
+  return (thirty_second & 0x1) ^ 1;
 }
 
 // P9
